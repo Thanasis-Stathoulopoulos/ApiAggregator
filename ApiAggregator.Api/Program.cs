@@ -23,24 +23,29 @@ builder.Services.AddSingleton<ICacheService, CacheService>();
 builder.Services.AddSingleton<IResiliencePolicies, ResiliencePolicies>();
 builder.Services.AddSingleton<IStatisticsService, StatisticsService>();
 
-// 3. Add Typed HTTP Clients with base URLs
-builder.Services.AddHttpClient<IExternalApiService, WeatherService>((sp, client) =>
+// 3. Add Typed HTTP Clients with base URLs (registered by concrete type so each gets its own instance)
+builder.Services.AddHttpClient<WeatherService>((sp, client) =>
 {
     var config = sp.GetRequiredService<IOptions<ApiSettings>>().Value;
     client.BaseAddress = new Uri(config.Apis["Weather"].BaseUrl);
 });
 
-builder.Services.AddHttpClient<IExternalApiService, NewsService>((sp, client) =>
+builder.Services.AddHttpClient<NewsService>((sp, client) =>
 {
     var config = sp.GetRequiredService<IOptions<ApiSettings>>().Value;
     client.BaseAddress = new Uri(config.Apis["News"].BaseUrl);
 });
 
-builder.Services.AddHttpClient<IExternalApiService, GitHubService>((sp, client) =>
+builder.Services.AddHttpClient<GitHubService>((sp, client) =>
 {
     var config = sp.GetRequiredService<IOptions<ApiSettings>>().Value;
     client.BaseAddress = new Uri(config.Apis["GitHub"].BaseUrl);
 });
+
+// Register the interface → concrete type mappings so the controller can resolve IExternalApiService via the typed HttpClient configurations
+builder.Services.AddTransient<IExternalApiService>(sp => sp.GetRequiredService<WeatherService>());
+builder.Services.AddTransient<IExternalApiService>(sp => sp.GetRequiredService<NewsService>());
+builder.Services.AddTransient<IExternalApiService>(sp => sp.GetRequiredService<GitHubService>());
 
 // 4. Add Background Performance Monitor
 builder.Services.AddHostedService<PerformanceMonitorService>();

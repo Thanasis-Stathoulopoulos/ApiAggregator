@@ -54,7 +54,7 @@ namespace ApiAggregator.Api.Infrastructure
                         ShouldHandle = new PredicateBuilder().Handle<Exception>(),
                         FailureRatio = res.FailureRatio,
                         SamplingDuration = TimeSpan.FromSeconds(res.SamplingDurationSeconds),
-                        MinimumThroughput = 2, // Low for testing/demonstration ease
+                        MinimumThroughput = 5,
                         BreakDuration = TimeSpan.FromSeconds(res.BreakDurationSeconds),
                         OnOpened = args =>
                         {
