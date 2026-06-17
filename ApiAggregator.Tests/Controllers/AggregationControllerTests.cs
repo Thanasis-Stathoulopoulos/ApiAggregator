@@ -47,6 +47,17 @@ namespace ApiAggregator.Tests.Controllers
                     new NewsResult { Title = "Learn .NET Core", Author = "John", Url = "https://example.com/net", Score = 100 },
                     new NewsResult { Title = "Hacker News story", Author = "Alice", Url = "https://example.com/hn", Score = 50 }
                 });
+            _newsServiceMock.As<IFilterableService>()
+                .Setup(f => f.Filter(It.IsAny<object>(), It.IsAny<string>()))
+                .Returns<object, string>((data, keyword) =>
+                {
+                    if (data is List<NewsResult> newsList)
+                    {
+                        return newsList.Where(n => n.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase) || 
+                                                    n.Author.Contains(keyword, StringComparison.OrdinalIgnoreCase)).ToList();
+                    }
+                    return data;
+                });
 
             _githubServiceMock = new Mock<IExternalApiService>();
             _githubServiceMock.Setup(s => s.ServiceName).Returns("GitHub");
@@ -61,6 +72,20 @@ namespace ApiAggregator.Tests.Controllers
                     Followers = 100,
                     Following = 5,
                     HtmlUrl = "https://github.com/dev-octocat"
+                });
+            _githubServiceMock.As<IFilterableService>()
+                .Setup(f => f.Filter(It.IsAny<object>(), It.IsAny<string>()))
+                .Returns<object, string>((data, keyword) =>
+                {
+                    if (data is GitHubResult gitHubResult)
+                    {
+                        var match = gitHubResult.Username.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                                    gitHubResult.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                                    gitHubResult.Bio.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                                    gitHubResult.Company.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+                        return match ? gitHubResult : null;
+                    }
+                    return data;
                 });
 
             _statsServiceMock = new Mock<IStatisticsService>();

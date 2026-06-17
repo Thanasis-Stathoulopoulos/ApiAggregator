@@ -7,7 +7,7 @@ using Microsoft.Extensions.Options;
 
 namespace ApiAggregator.Api.Services
 {
-    public class NewsService : IExternalApiService
+    public class NewsService : IExternalApiService, IFilterableService
     {
         private readonly HttpClient _httpClient;
         private readonly ICacheService _cacheService;
@@ -130,6 +130,18 @@ namespace ApiAggregator.Api.Services
                     PublishedAt = DateTime.UtcNow.AddHours(-10)
                 }
             };
+        }
+
+        public object? Filter(object data, string keyword)
+        {
+            if (data is List<NewsResult> newsList)
+            {
+                return newsList
+                    .Where(n => n.Title.Contains(keyword, StringComparison.OrdinalIgnoreCase) || 
+                                n.Author.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                    .ToList();
+            }
+            return data;
         }
     }
 }

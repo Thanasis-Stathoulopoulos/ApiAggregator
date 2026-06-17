@@ -8,7 +8,7 @@ using Microsoft.Extensions.Options;
 
 namespace ApiAggregator.Api.Services
 {
-    public class GitHubService : IExternalApiService
+    public class GitHubService : IExternalApiService, IFilterableService
     {
         private readonly HttpClient _httpClient;
         private readonly ICacheService _cacheService;
@@ -87,6 +87,20 @@ namespace ApiAggregator.Api.Services
                 Following = 42,
                 HtmlUrl = "https://github.com/octocat"
             };
+        }
+
+        public object? Filter(object data, string keyword)
+        {
+            if (data is GitHubResult gitHubResult)
+            {
+                var match = gitHubResult.Username.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            gitHubResult.Name.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            gitHubResult.Bio.Contains(keyword, StringComparison.OrdinalIgnoreCase) ||
+                            gitHubResult.Company.Contains(keyword, StringComparison.OrdinalIgnoreCase);
+
+                return match ? gitHubResult : null;
+            }
+            return data;
         }
     }
 }

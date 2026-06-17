@@ -78,20 +78,13 @@ namespace ApiAggregator.Api.Controllers
                     // Log performance statistics
                     _statisticsService.RecordRequest(service.ServiceName, isSuccess, elapsed, errorMessage);
 
-                    // Map result to appropriate property
+                    // Map result dynamically
                     if (isSuccess && result != null)
                     {
-                        if (service.ServiceName.Equals("Weather", StringComparison.OrdinalIgnoreCase))
+                        var key = service.ServiceName.ToLowerInvariant();
+                        lock (aggregatedResult.Data)
                         {
-                            aggregatedResult.Weather = (WeatherResult)result;
-                        }
-                        else if (service.ServiceName.Equals("News", StringComparison.OrdinalIgnoreCase))
-                        {
-                            aggregatedResult.News = (List<NewsResult>)result;
-                        }
-                        else if (service.ServiceName.Equals("GitHub", StringComparison.OrdinalIgnoreCase))
-                        {
-                            aggregatedResult.GitHub = (GitHubResult)result;
+                            aggregatedResult.Data[key] = result;
                         }
                     }
 
@@ -112,28 +105,24 @@ namespace ApiAggregator.Api.Controllers
             // 2. Execute all calls in parallel using Task.WhenAll
             await Task.WhenAll(tasks);
 
-            // 3. Filter results if Keyword is specified
+            // 3. Filter results dynamically if Keyword is specified
             if (!string.IsNullOrWhiteSpace(filterParams.Keyword))
             {
-                var keyword = filterParams.Keyword.ToLowerInvariant();
-
-                if (aggregatedResult.News != null)
+                var keyword = filterParams.Keyword.Trim();
+                foreach (var service in activeServices)
                 {
-                    aggregatedResult.News = aggregatedResult.News
-                        .Where(n => n.Title.ToLowerInvariant().Contains(keyword) || n.Author.ToLowerInvariant().Contains(keyword))
-                        .ToList();
-                }
-
-                if (aggregatedResult.GitHub != null)
-                {
-                    var match = aggregatedResult.GitHub.Username.ToLowerInvariant().Contains(keyword) ||
-                                aggregatedResult.GitHub.Name.ToLowerInvariant().Contains(keyword) ||
-                                aggregatedResult.GitHub.Bio.ToLowerInvariant().Contains(keyword) ||
-                                aggregatedResult.GitHub.Company.ToLowerInvariant().Contains(keyword);
-
-                    if (!match)
+                    var key = service.ServiceName.ToLowerInvariant();
+                    if (service is IFilterableService filterableService && aggregatedResult.Data.TryGetValue(key, out var data) && data != null)
                     {
-                        aggregatedResult.GitHub = null;
+                        var filteredData = filterableService.Filter(data, keyword);
+                        if (filteredData == null)
+                        {
+                            aggregatedResult.Data.Remove(key);
+                        }
+                        else
+                        {
+                            aggregatedResult.Data[key] = filteredData;
+                        }
                     }
                 }
             }
