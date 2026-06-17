@@ -1,3 +1,4 @@
+using System.Linq;
 using ApiAggregator.Api.Services.Interfaces;
 
 namespace ApiAggregator.Api.BackgroundServices
@@ -38,7 +39,9 @@ namespace ApiAggregator.Api.BackgroundServices
 
         private void AnalyzePerformance()
         {
-            var services = new[] { "weather", "news", "github" };
+            var services = _statisticsService.GetStatistics()
+                .Select(s => s.ServiceName)
+                .ToList();
 
             foreach (var service in services)
             {

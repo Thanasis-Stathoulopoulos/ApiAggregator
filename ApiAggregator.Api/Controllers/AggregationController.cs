@@ -49,6 +49,11 @@ namespace ApiAggregator.Api.Controllers
             }
 
             var aggregatedResult = new AggregatedResult();
+            foreach (var service in activeServices)
+            {
+                aggregatedResult.Data[service.ServiceName.ToLowerInvariant()] = null!;
+            }
+
             var tasks = activeServices.Select(async service =>
             {
                 var stopwatch = Stopwatch.StartNew();
@@ -117,7 +122,7 @@ namespace ApiAggregator.Api.Controllers
                         var filteredData = filterableService.Filter(data, keyword);
                         if (filteredData == null)
                         {
-                            aggregatedResult.Data.Remove(key);
+                            aggregatedResult.Data[key] = null!;
                         }
                         else
                         {
