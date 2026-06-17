@@ -81,7 +81,7 @@ dotnet build
 ```
 
 ### 2. Run the Unit Tests
-Execute the comprehensive suite of 43 unit tests across services and controllers:
+Execute the comprehensive suite of 53 unit tests across services and controllers:
 ```bash
 dotnet test
 ```
@@ -108,7 +108,11 @@ A pre-configured Postman Collection is included in the repository root as [ApiAg
 
 All endpoints under `/api/aggregation` and `/api/statistics` require a valid JWT bearer token.
 
-1. **Obtain Token**: Send a login request.
+* **Demo Credentials**:
+  * **Username**: `admin`
+  * **Password**: `password123`
+
+1. **Obtain Token**: Send a `POST /api/auth/login` request with the credentials above.
 2. **Add Header**: Supply the returned token in the HTTP `Authorization` header as:
    ```http
    Authorization: Bearer <your-jwt-token>
