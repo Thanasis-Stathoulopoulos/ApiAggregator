@@ -7,6 +7,9 @@ using Microsoft.Extensions.Caching.Memory;
 
 namespace ApiAggregator.Api.Controllers
 {
+    /// <summary>
+    /// Controller handling external API data aggregation.
+    /// </summary>
     [Authorize]
     [ApiController]
     [Route("api/[controller]")]
@@ -29,7 +32,19 @@ namespace ApiAggregator.Api.Controllers
             _logger = logger;
         }
 
+        /// <summary>
+        /// Fetches, filters, sorts, and aggregates data from multiple external APIs in parallel.
+        /// </summary>
+        /// <param name="filterParams">The filter and sorting parameters.</param>
+        /// <param name="cancellationToken">The cancellation token.</param>
+        /// <returns>The unified aggregated results from Weather, News, and GitHub APIs.</returns>
+        /// <response code="200">Returns the aggregated data and metadata.</response>
+        /// <response code="400">If the filter or sorting parameters fail validation constraints.</response>
+        /// <response code="401">If the user is unauthorized.</response>
         [HttpGet]
+        [ProducesResponseType(typeof(AggregatedResult), StatusCodes.Status200OK)]
+        [ProducesResponseType(StatusCodes.Status400BadRequest)]
+        [ProducesResponseType(StatusCodes.Status401Unauthorized)]
         public async Task<IActionResult> GetAggregatedData([FromQuery] FilterParams filterParams, CancellationToken cancellationToken)
         {
             _logger.LogInformation("Received request for aggregated data");

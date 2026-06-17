@@ -1,5 +1,6 @@
 using ApiAggregator.Api.Configuration;
 using ApiAggregator.Api.Controllers;
+using ApiAggregator.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Xunit;

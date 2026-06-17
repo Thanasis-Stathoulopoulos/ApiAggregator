@@ -2,12 +2,16 @@ using System.IdentityModel.Tokens.Jwt;
 using System.Security.Claims;
 using System.Text;
 using ApiAggregator.Api.Configuration;
+using ApiAggregator.Api.Models;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 
 namespace ApiAggregator.Api.Controllers
 {
+    /// <summary>
+    /// Controller handling authentication operations.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
@@ -19,13 +23,22 @@ namespace ApiAggregator.Api.Controllers
             _settings = settings.Value;
         }
 
+        /// <summary>
+        /// Authenticates a user and issues a JWT token.
+        /// </summary>
+        /// <param name="request">The login credentials (admin / password123).</param>
+        /// <returns>A JWT access token if successful.</returns>
+        /// <response code="200">Returns the JWT access token.</response>
+        /// <response code="401">If the credentials are invalid.</response>
         [HttpPost("login")]
+        [ProducesResponseType(typeof(LoginResponse), StatusCodes.Status200OK)]
+        [ProducesResponseType(typeof(string), StatusCodes.Status401Unauthorized)]
         public IActionResult Login([FromBody] LoginRequest request)
         {
             if (request.Username == "admin" && request.Password == "password123")
             {
                 var token = GenerateJwtToken(request.Username);
-                return Ok(new { Token = token });
+                return Ok(new LoginResponse { Token = token });
             }
 
             return Unauthorized("Invalid credentials. Use admin / password123.");
@@ -50,11 +63,5 @@ namespace ApiAggregator.Api.Controllers
             var token = tokenHandler.CreateToken(tokenDescriptor);
             return tokenHandler.WriteToken(token);
         }
-    }
-
-    public class LoginRequest
-    {
-        public string Username { get; set; } = string.Empty;
-        public string Password { get; set; } = string.Empty;
     }
 }
